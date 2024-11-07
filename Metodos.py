@@ -1,67 +1,140 @@
-#prueba muy basica 
-#no creo que lo dejemos asi
-
 import sqlite3
+from datetime import datetime
 
-def estado_de_resultados():
-    # Conectar a la base de datos
-    with sqlite3.connect('empresa_lapices.db') as conexion :
-        cursor = conexion.cursor()
+class Admin:
+
+    def agregar_inventario(self):
+        """Solicita el ID del producto, la cantidad y la fecha para aumentar el inventario, con validaciones."""
+        while True:
+            try:
+                id_producto = int(input("Ingrese el ID del producto: "))
+                if id_producto <= 0:
+                    print("El ID del producto debe ser un número positivo.")
+                    continue
+                break
+            except ValueError:
+                print("Por favor, ingrese un número válido para el ID del producto.")
         
-        # Obtener ventas netas y costo de ventas
-        cursor.execute("""
-            SELECT p.nombre, p.precio_venta, p.costo_produccion, SUM(v.cantidad_vendida) AS total_vendido
-            FROM Productos p
-            JOIN Ventas v ON p.id_producto = v.id_producto
-            GROUP BY p.id_producto
-        """)
+        while True:
+            try:
+                cantidad = int(input("Ingrese la cantidad a agregar al inventario: "))
+                if cantidad <= 0:
+                    print("La cantidad debe ser un número positivo.")
+                    continue
+                break
+            except ValueError:
+                print("Por favor, ingrese un número válido para la cantidad.")
+
+        fecha = input("Ingrese la fecha de registro (YYYY-MM-DD) o deje vacío para usar la fecha actual: ")
+        if fecha:
+            if not self.validar_fecha(fecha):
+                print("Formato de fecha no válido. Se usará la fecha actual.")
+                fecha = datetime.now().strftime("%Y-%m-%d")
+        else:
+            fecha = datetime.now().strftime("%Y-%m-%d")
         
-        ventas_netas = 0
-        costo_ventas = 0
+        with sqlite3.connect("empresalapices.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE Productos SET stock = stock + ? WHERE id_producto = ?", (cantidad, id_producto))
+            print(f"Se ha añadido {cantidad} unidades al inventario del producto con ID {id_producto} en la fecha {fecha}.")
+
+    def registrar_gasto_operativo(self):
+        """Solicita el nombre, monto y fecha del gasto operativo con validaciones."""
+        nombre = input("Ingrese el nombre del gasto operativo: ").strip()
+        if not nombre:
+            print("El nombre del gasto no puede estar vacío.")
+            return
         
-        for producto in cursor.fetchall():
-            nombre, precio_venta, costo_produccion, total_vendido = producto
-            ventas_producto = precio_venta * total_vendido
-            costo_producto = costo_produccion * total_vendido
-            
-            ventas_netas += ventas_producto
-            costo_ventas += costo_producto
+        while True:
+            try:
+                monto = float(input("Ingrese el monto del gasto operativo: "))
+                if monto <= 0:
+                    print("El monto debe ser un valor positivo.")
+                    continue
+                break
+            except ValueError:
+                print("Por favor, ingrese un monto válido.")
         
-        utilidad_bruta = ventas_netas - costo_ventas
-
-        # Obtener gastos operativos
-        cursor.execute("SELECT SUM(monto) FROM GastosOperativos")
-        gastos_operativos = cursor.fetchone()[0] or 0
-
-        # Obtener otros ingresos y otros gastos
-        cursor.execute("SELECT SUM(monto) FROM OtrosIngresos")
-        otros_ingresos = cursor.fetchone()[0] or 0
+        fecha = input("Ingrese la fecha de registro (YYYY-MM-DD) o deje vacío para usar la fecha actual: ")
+        if fecha:
+            if not self.validar_fecha(fecha):
+                print("Formato de fecha no válido. Se usará la fecha actual.")
+                fecha = datetime.now().strftime("%Y-%m-%d")
+        else:
+            fecha = datetime.now().strftime("%Y-%m-%d")
         
-        cursor.execute("SELECT SUM(monto) FROM OtrosGastos")
-        otros_gastos = cursor.fetchone()[0] or 0
+        with sqlite3.connect("empresalapices.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO GastosOperativos (nombre, monto, fecha) VALUES (?, ?, ?)", 
+                           (nombre, monto, fecha))
+            print(f"Gasto operativo registrado: {nombre} - ${monto} en la fecha {fecha}")
+
+    def registrar_ingreso(self):
+        """Solicita el nombre, monto y fecha del ingreso con validaciones."""
+        nombre = input("Ingrese el nombre del ingreso: ").strip()
+        if not nombre:
+            print("El nombre del ingreso no puede estar vacío.")
+            return
         
-        # Calcular utilidades
-        utilidad_operativa = utilidad_bruta - gastos_operativos
+        while True:
+            try:
+                monto = float(input("Ingrese el monto del ingreso: "))
+                if monto <= 0:
+                    print("El monto debe ser un valor positivo.")
+                    continue
+                break
+            except ValueError:
+                print("Por favor, ingrese un monto válido.")
+        
+        fecha = input("Ingrese la fecha de registro (YYYY-MM-DD) o deje vacío para usar la fecha actual: ")
+        if fecha:
+            if not self.validar_fecha(fecha):
+                print("Formato de fecha no válido. Se usará la fecha actual.")
+                fecha = datetime.now().strftime("%Y-%m-%d")
+        else:
+            fecha = datetime.now().strftime("%Y-%m-%d")
+        
+        with sqlite3.connect("empresalapices.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO OtrosIngresos (nombre, monto, fecha) VALUES (?, ?, ?)", 
+                           (nombre, monto, fecha))
+            print(f"Ingreso registrado: {nombre} - ${monto} en la fecha {fecha}")
 
-        utilidad_antes_impuestos = utilidad_operativa + otros_ingresos - otros_gastos
+    def registrar_otro_gasto(self):
+        """Solicita el nombre, monto y fecha del otro gasto con validaciones."""
+        nombre = input("Ingrese el nombre del otro gasto: ").strip()
+        if not nombre:
+            print("El nombre del gasto no puede estar vacío.")
+            return
+        
+        while True:
+            try:
+                monto = float(input("Ingrese el monto del otro gasto: "))
+                if monto <= 0:
+                    print("El monto debe ser un valor positivo.")
+                    continue
+                break
+            except ValueError:
+                print("Por favor, ingrese un monto válido.")
+        
+        fecha = input("Ingrese la fecha de registro (YYYY-MM-DD) o deje vacío para usar la fecha actual: ")
+        if fecha:
+            if not self.validar_fecha(fecha):
+                print("Formato de fecha no válido. Se usará la fecha actual.")
+                fecha = datetime.now().strftime("%Y-%m-%d")
+        else:
+            fecha = datetime.now().strftime("%Y-%m-%d")
+        
+        with sqlite3.connect("empresalapices.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO OtrosGastos (nombre, monto, fecha) VALUES (?, ?, ?)", 
+                           (nombre, monto, fecha))
+            print(f"Otro gasto registrado: {nombre} - ${monto} en la fecha {fecha}")
 
-        impuestos = utilidad_antes_impuestos * 0.30  # Tasa de impuestos del 30%
-
-        utilidad_neta = utilidad_antes_impuestos - impuestos
-
-        # Mostrar el estado de resultados completo
-        print("\nEstado de Resultados Completo")
-        print("-----------------------------")
-        print(f"Ventas Netas:                        ${ventas_netas:,.2f}")
-        print(f"(-) Costo de Ventas:                 ${costo_ventas:,.2f}")
-        print(f"= Utilidad Bruta:                    ${utilidad_bruta:,.2f}")
-        print(f"(-) Gastos Operativos:               ${gastos_operativos:,.2f}")
-        print(f"= Utilidad Operativa:                ${utilidad_operativa:,.2f}")
-        print(f"(+) Otros Ingresos:                  ${otros_ingresos:,.2f}")
-        print(f"(-) Otros Gastos:                    ${otros_gastos:,.2f}")
-        print(f"= Utilidad Antes de Impuestos:       ${utilidad_antes_impuestos:,.2f}")
-        print(f"(-) Impuestos (30%):                 ${impuestos:,.2f}")
-        print(f"= Utilidad Neta:                     ${utilidad_neta:,.2f}")
-
-
-
+    def validar_fecha(self, fecha):
+        """Valida el formato de fecha ingresado por el usuario."""
+        try:
+            datetime.strptime(fecha, "%Y-%m-%d")
+            return True
+        except ValueError:
+            return False
