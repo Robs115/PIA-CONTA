@@ -257,3 +257,86 @@ class Admin:
             print(f"Utilidad bruta:             ${utilidad_bruta:,.2f}")
             print(f"Utilidad neta:              ${utilidad_neta:,.2f}")
             print("=" * 50)
+            
+            
+
+    def punto_equilibrio_todos_productos(self):
+        """Calcula el punto de equilibrio para todos los productos."""
+        try:
+            with sqlite3.connect("empresalapices.db") as conn:
+                cursor = conn.cursor()
+                
+                # Obtener costos fijos desde la tabla GastosOperativos
+                cursor.execute("SELECT SUM(monto) FROM GastosOperativos WHERE tipo = 'fijo'")  # Asumiendo que hay un campo 'tipo'
+                costos_fijos_result = cursor.fetchone()
+                
+                if costos_fijos_result is None or costos_fijos_result[0] is None:
+                    print("Error: No se encontraron costos fijos en la base de datos.")
+                    return
+                
+                costos_fijos = costos_fijos_result[0]
+                
+                # Obtener todos los productos
+                cursor.execute("SELECT id_producto, precio_venta, costo_variable FROM Productos")
+                productos = cursor.fetchall()
+                
+                if not productos:
+                    print("No se encontraron productos en la base de datos.")
+                    return
+                
+                puntos_equilibrio = {}
+                
+                for producto in productos:
+                    id_producto, precio_venta, costo_variable = producto
+                    if precio_venta > costo_variable:  
+                        punto_equilibrio = costos_fijos / (precio_venta - costo_variable)
+                        puntos_equilibrio[id_producto] = punto_equilibrio
+                    else:
+                        puntos_equilibrio[id_producto] = None 
+                
+                # Mostrar resultados
+                for id_producto, punto_equilibrio in puntos_equilibrio.items():
+                    if punto_equilibrio is not None:
+                        print(f"Punto de equilibrio para el producto ID {id_producto}: {punto_equilibrio:.2f} unidades")
+                    else:
+                        print(f"No se puede calcular el punto de equilibrio para el producto ID {id_producto} (precio de venta <= costo variable)")
+        
+        except sqlite3.Error as e:
+            print(f"Error de base de datos: {e}")
+        except Exception as e:
+            print(f"Ocurrió un error inesperado: {e}")
+    
+    def punto_equilibrio_producto_especifico(self, id_producto):
+        """Calcula el punto de equilibrio para un producto específico."""
+        try:
+            with sqlite3.connect("empresalapices.db") as conn:
+                cursor = conn.cursor()
+                
+                # Obtener costos fijos desde la tabla GastosOperativos
+                cursor.execute("SELECT SUM(monto) FROM GastosOperativos WHERE tipo = 'fijo'")  # Asumiendo que hay un campo 'tipo'
+                costos_fijos_result = cursor.fetchone()
+                
+                if costos_fijos_result is None or costos_fijos_result[0] is None:
+                    print("Error: No se encontraron costos fijos en la base de datos.")
+                    return
+                
+                costos_fijos = costos_fijos_result[0]
+                
+                # Obtener el producto específico
+                cursor.execute("SELECT precio_venta, costo_variable FROM Productos WHERE id_producto = ?", (id_producto,))
+                producto = cursor.fetchone()
+                
+                if producto:
+                    precio_venta, costo_variable = producto
+                    if precio_venta > costo_variable:
+                        punto_equilibrio = costos_fijos / (precio_venta - costo_variable)
+                        print(f"Punto de equilibrio para el producto ID {id_producto}: {punto_equilibrio:.2f} unidades")
+                    else:
+                        print(f"No se puede calcular el punto de equilibrio para el producto ID {id_producto} (precio de venta <= costo variable)")
+                else:
+                    print(f"Producto con ID {id_producto} no encontrado.")
+        
+        except sqlite3.Error as e:
+            print(f"Error de base de datos: {e}")
+        except Exception as e:
+            print(f"Ocurrió un error inesperado: {e}")
