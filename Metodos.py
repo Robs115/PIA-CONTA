@@ -305,7 +305,6 @@ class Admin:
             print(f"Utilidad bruta:             ${utilidad_bruta:,.2f}")
             print(f"Utilidad neta:              ${utilidad_neta:,.2f}")
             print("=" * 50)
-            
 
     def punto_equilibrio_todos_productos(self):
         """Calcula el punto de equilibrio para todos los productos."""
@@ -353,8 +352,16 @@ class Admin:
         except Exception as e:
             print(f"Ocurrió un error inesperado: {e}")
     
-    def punto_equilibrio_producto_especifico(self, id_producto):
+    def punto_equilibrio_producto_especifico(self):
         """Calcula el punto de equilibrio para un producto específico."""
+        
+        id_producto = input("Por favor, ingrese el ID del producto: ")
+
+        # Verificar si el producto existe
+        if id_producto not in self.productos:
+            print("El ID del producto no existe.")
+            return
+        
         try:
             with sqlite3.connect("empresalapices.db") as conn:
                 cursor = conn.cursor()
