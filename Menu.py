@@ -4,7 +4,7 @@ met = Admin()
 
 def ejecutar_menu():
     opciones_menu_principal = {
-        '1': ('Agregar Inventario', met.agregar_inventario),
+        '1': ('Agregar Inventario', met.agregar_producto),
         '2': ('Agregar gastos operativos', met.registrar_gasto_operativo),
         '3': ('Agregar ingreso', met.registrar_ingreso),
         '4': ('Agregar otros gastos', met.registrar_otro_gasto),
