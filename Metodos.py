@@ -54,68 +54,54 @@ class Admin:
 
 
     def registrar_gasto_operativo(self):
-        """Solicita una categoría de gasto operativo, muestra su valor actual y luego incrementa su valor en la base de datos."""
-        categorias_gasto = [
-            "Transporte", "Servicios de limpieza", "Servicios bancarios", "Seguro", "Seguridad",
-            "Salarios", "Reparaciones", "Renta", "Publicidad", "Papelería", "Material de oficina",
-            "Mantenimiento", "Internet", "Insumos varios", "Gastos legales", "Flete", "Equipo de seguridad",
-            "Electricidad", "Consultoría", "Capacitación"
+
+        # Lista de categorías de gasto operativo
+        categorias = [
+            "Renta", "Electricidad", "Internet", "Papelería", "Mantenimiento", 
+            "Servicios de limpieza", "Seguridad", "Salarios", "Capacitación", 
+            "Publicidad", "Transporte", "Consultoría", "Seguro", "Reparaciones", 
+            "Insumos varios", "Material de oficina", "Equipo de seguridad", 
+            "Flete", "Gastos legales", "Servicios bancarios"
         ]
-        # Mostrar las categorías disponibles
-        print("Categorías de gastos operativos disponibles:")
-        for index, categoria in enumerate(categorias_gasto, 1):
-            print(f"{index}. {categoria}")
 
-        # Solicitar la categoría al usuario
-        while True:
-            try:
-                opcion = int(input("Seleccione el número de la categoría a la que desea incrementar el valor: "))
-                if 1 <= opcion <= len(categorias_gasto):
-                    categoria_seleccionada = categorias_gasto[opcion - 1]
-                    break
-                else:
-                    print("Opción no válida. Intente nuevamente.")
-            except ValueError:
-                print("Por favor ingrese un número válido.")
+        # Mostrar categorías y solicitar nombre del gasto
+        print("Categorías de gastos operativos:")
+        for i, categoria in enumerate(categorias, 1):
+            print(f"{i}. {categoria}")
+        
+        indice_categoria = int(input("Seleccione el número de la categoría de gasto: "))
+        if 1 <= indice_categoria <= len(categorias):
+            nombre = categorias[indice_categoria - 1]
+        else:
+            print("Selección no válida.")
+            return
+        
+        # Solicitar valor del gasto
+        try:
+            valor = float(input(f"Ingrese el valor para '{nombre}': "))
+        except ValueError:
+            print("Valor no válido. Ingrese un número.")
+            return
 
-        # Abrir conexión a la base de datos
-        with sqlite3.connect("empresalapices.db") as conn:
-            cursor = conn.cursor()
-
-            # Consultar el valor actual registrado para la categoría seleccionada
-            cursor.execute("SELECT valor FROM GastosOperativos WHERE categoria = ?", (categoria_seleccionada,))
-            categoria = cursor.fetchone()
-
-            if categoria:
-                # Mostrar el valor actual de la categoría
-                print(f"El valor actual registrado para '{categoria_seleccionada}' es: ${categoria[0]}")
-                valor_actual = categoria[0]
+        # Conectar a la base de datos y actualizar/agregar el gasto
+        with sqlite3.connect('mi_base_de_datos.db') as conexion:
+            cursor = conexion.cursor()
+            
+            # Buscar el gasto operativo en la base de datos
+            cursor.execute("SELECT valor FROM GastosOperativos WHERE nombre = ?", (nombre,))
+            resultado = cursor.fetchone()
+            
+            if resultado:
+                # Si el gasto existe, sumarle el valor al actual
+                nuevo_valor = resultado[0] + valor
+                cursor.execute("UPDATE GastosOperativos SET valor = ? WHERE nombre = ?", (nuevo_valor, nombre))
+                print(f"Actualizado '{nombre}' con nuevo valor: {nuevo_valor}")
             else:
-                # Si no existe un valor, mostrar que no se ha registrado
-                print(f"No se ha registrado un valor para '{categoria_seleccionada}'.")
-                valor_actual = 0
+                # Si el gasto no existe, agregarlo como nuevo
+                cursor.execute("INSERT INTO GastosOperativos (nombre, valor) VALUES (?, ?)", (nombre, valor))
+                print(f"Agregado nuevo gasto '{nombre}' con valor: {valor}")
+            
 
-            # Solicitar el valor a incrementar
-            while True:
-                try:
-                    incremento = float(input(f"Ingrese el valor a incrementar para '{categoria_seleccionada}': "))
-                    if incremento <= 0:
-                        print("El valor debe ser mayor que 0.")
-                        continue
-                    break
-                except ValueError:
-                    print("Por favor ingrese un valor válido.")
-
-            # Verificar si la categoría existe en la tabla
-            if categoria:
-                # Si ya existe, incrementar el valor
-                nuevo_valor = valor_actual + incremento
-                cursor.execute("UPDATE GastosOperativos SET valor = ? WHERE categoria = ?", (nuevo_valor, categoria_seleccionada))
-                print(f"Se ha incrementado el valor de '{categoria_seleccionada}' en ${incremento}. Nuevo valor: ${nuevo_valor}.")
-            else:
-                # Si no existe, agregar un nuevo registro con el valor inicial
-                cursor.execute("INSERT INTO GastosOperativos (categoria, valor) VALUES (?, ?)", (categoria_seleccionada, incremento))
-                print(f"Se ha registrado un nuevo gasto operativo de '${incremento}' para la categoría '{categoria_seleccionada}'.")
 
     def registrar_ingreso(self):
         """Solicita el nombre, monto y fecha del ingreso con validaciones."""
@@ -356,18 +342,23 @@ class Admin:
         """Calcula el punto de equilibrio para un producto específico."""
         
         id_producto = input("Por favor, ingrese el ID del producto: ")
+        with sqlite3.connect ("empresalapices.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("Select * from Productos")
+            productos = cursor.fetchall()[0]
+
 
         # Verificar si el producto existe
-        if id_producto not in self.productos:
-            print("El ID del producto no existe.")
-            return
+            if id_producto not in productos:
+                print("El ID del producto no existe.")
+                return
         
         try:
             with sqlite3.connect("empresalapices.db") as conn:
                 cursor = conn.cursor()
                 
                 # Obtener costos fijos desde la tabla GastosOperativos
-                cursor.execute("SELECT SUM(monto) FROM GastosOperativos WHERE tipo = 'fijo'")  # Asumiendo que hay un campo 'tipo'
+                cursor.execute("SELECT SUM(monto) FROM GastosOperativos WHERE tipo = 'FIJO'")  # Asumiendo que hay un campo 'tipo'
                 costos_fijos_result = cursor.fetchone()
                 
                 if costos_fijos_result is None or costos_fijos_result[0] is None:
