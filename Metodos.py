@@ -71,7 +71,7 @@ class Admin:
             # Insertar el nuevo producto
             cursor.execute("""
                 INSERT INTO Productos (id_producto, nombre, tipo, costo_produccion, precio_venta, stock)
-                VALUES (?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?)
             """, (nuevo_id, nombre, tipo,costo_produccion, precio, cantidad))
 
             # Confirmación de que el producto ha sido agregado
