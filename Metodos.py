@@ -11,6 +11,31 @@ class Admin:
         if not nombre:
             print("El nombre del producto no puede estar vacío.")
             return
+        
+        while True:
+            try:
+                tipo = input("Digite el tipo o material")
+                if tipo == "":
+                    input("No debe estar vacio")
+                    return
+                elif tipo.isnumeric():
+                    print(" no puede llevar numeros")
+                    return
+                
+                break
+            except ValueError:
+                print("Hubo un error")
+        
+        while True:
+            try:
+                costo_produccion = float(input("Digite el costo de produccion"))
+                if not costo_produccion:
+                    print("No debe ir vacio")
+                    return
+                break
+            except ValueError:
+                print("ah Habido un error")
+
 
         while True:
             try:
@@ -45,9 +70,9 @@ class Admin:
 
             # Insertar el nuevo producto
             cursor.execute("""
-                INSERT INTO Productos (id_producto, nombre, precio, stock)
+                INSERT INTO Productos (id_producto, nombre, tipo, costo_produccion, precio_venta, stock)
                 VALUES (?, ?, ?, ?)
-            """, (nuevo_id, nombre, precio, cantidad))
+            """, (nuevo_id, nombre, tipo,costo_produccion, precio, cantidad))
 
             # Confirmación de que el producto ha sido agregado
             print(f"Producto '{nombre}' agregado con éxito con un precio de ${precio} y una cantidad de {cantidad} unidades.")
