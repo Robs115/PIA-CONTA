@@ -11,7 +11,7 @@ def ejecutar_menu():
         '5': ('Estado de Resultados General', met.estado_resultado_general),
         '6': ('Estado de Resultados por Periodo', met.estado_resultado_por_periodo),
         '7': ('Punto de Equilibrio General', met.punto_equilibrio_todos_productos),
-        '8': ('Punto de Equilibrio por Periodo', met.punto_equilibrio_producto_especifico),
+        '8': ('Punto de Equilibrio Producto Especifico', met.punto_equilibrio_producto_especifico),
         '9': ('Salida', confirmar_salida)
     }
     while True:
