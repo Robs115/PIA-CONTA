@@ -109,21 +109,21 @@ class Admin:
             return
 
         # Conectar a la base de datos y actualizar/agregar el gasto
-        with sqlite3.connect('mi_base_de_datos.db') as conexion:
+        with sqlite3.connect('empresalapices.db') as conexion:
             cursor = conexion.cursor()
             
             # Buscar el gasto operativo en la base de datos
-            cursor.execute("SELECT valor FROM GastosOperativos WHERE nombre = ?", (nombre,))
+            cursor.execute("SELECT monto FROM GastosOperativos WHERE nombre = ?", (nombre,))
             resultado = cursor.fetchone()
             
             if resultado:
                 # Si el gasto existe, sumarle el valor al actual
                 nuevo_valor = resultado[0] + valor
-                cursor.execute("UPDATE GastosOperativos SET valor = ? WHERE nombre = ?", (nuevo_valor, nombre))
+                cursor.execute("UPDATE GastosOperativos SET monto = ? WHERE nombre = ?", (nuevo_valor, nombre))
                 print(f"Actualizado '{nombre}' con nuevo valor: {nuevo_valor}")
             else:
                 # Si el gasto no existe, agregarlo como nuevo
-                cursor.execute("INSERT INTO GastosOperativos (nombre, valor) VALUES (?, ?)", (nombre, valor))
+                cursor.execute("INSERT INTO GastosOperativos (nombre, monto) VALUES (?, ?)", (nombre, valor))
                 print(f"Agregado nuevo gasto '{nombre}' con valor: {valor}")
             
 
@@ -204,16 +204,14 @@ class Admin:
             cursor = conn.cursor()
             
             # Calcular ingresos totales (Ventas + Otros Ingresos + Ingresos)
-            cursor.execute("SELECT SUM(total) FROM Ventas")
+            cursor.execute("SELECT SUM(cantidad_vendida) FROM Ventas")
             total_ventas = cursor.fetchone()[0] or 0
             
             cursor.execute("SELECT SUM(monto) FROM OtrosIngresos")
             total_otros_ingresos = cursor.fetchone()[0] or 0
 
-            cursor.execute("SELECT SUM(monto) FROM Ingresos")
-            total_ingresos = cursor.fetchone()[0] or 0
             
-            ingresos_totales = total_ventas + total_otros_ingresos + total_ingresos
+            ingresos_totales = total_ventas + total_otros_ingresos 
             
             # Calcular costos totales (Costo de producción de los productos vendidos)
             cursor.execute("SELECT SUM(costo_produccion) FROM Productos")
@@ -232,7 +230,6 @@ class Admin:
             print("=" * 30)
             print(f"Ingresos por ventas:        ${total_ventas:,.2f}")
             print(f"Otros ingresos:             ${total_otros_ingresos:,.2f}")
-            print(f"Ingresos adicionales:       ${total_ingresos:,.2f}")
             print(f"Ingresos totales:           ${ingresos_totales:,.2f}")
             print(f"Costos de producción:       ${total_costos:,.2f}")
             print(f"Gastos operativos:          ${gastos_operativos:,.2f}")
@@ -265,7 +262,7 @@ class Admin:
             
             # Calcular ingresos por ventas en el periodo
             cursor.execute("""
-                SELECT SUM(total) FROM Ventas 
+                SELECT SUM(cantidad_vendida) FROM Ventas 
                 WHERE fecha BETWEEN ? AND ?
             """, (fecha_inicio, fecha_fin))
             total_ventas = cursor.fetchone()[0] or 0
@@ -278,13 +275,9 @@ class Admin:
             total_otros_ingresos = cursor.fetchone()[0] or 0
             
             # Calcular ingresos adicionales en el periodo
-            cursor.execute("""
-                SELECT SUM(monto) FROM Ingresos 
-                WHERE fecha BETWEEN ? AND ?
-            """, (fecha_inicio, fecha_fin))
-            total_ingresos = cursor.fetchone()[0] or 0
+
             
-            ingresos_totales = total_ventas + total_otros_ingresos + total_ingresos
+            ingresos_totales = total_ventas + total_otros_ingresos 
             
             # Calcular costos totales en el periodo
             cursor.execute("""
@@ -309,7 +302,6 @@ class Admin:
             print("=" * 50)
             print(f"Ingresos por ventas:        ${total_ventas:,.2f}")
             print(f"Otros ingresos:             ${total_otros_ingresos:,.2f}")
-            print(f"Ingresos adicionales:       ${total_ingresos:,.2f}")
             print(f"Ingresos totales:           ${ingresos_totales:,.2f}")
             print(f"Costos de producción:       ${total_costos:,.2f}")
             print(f"Gastos operativos:          ${gastos_operativos:,.2f}")
@@ -324,7 +316,7 @@ class Admin:
                 cursor = conn.cursor()
                 
                 # Obtener costos fijos desde la tabla GastosOperativos
-                cursor.execute("SELECT SUM(monto) FROM GastosOperativos WHERE tipo = 'fijo'")  # Asumiendo que hay un campo 'tipo'
+                cursor.execute("SELECT SUM(monto) FROM GastosOperativos WHERE tipo = 'FIJO'")  # Asumiendo que hay un campo 'tipo'
                 costos_fijos_result = cursor.fetchone()
                 
                 if costos_fijos_result is None or costos_fijos_result[0] is None:
@@ -334,7 +326,7 @@ class Admin:
                 costos_fijos = costos_fijos_result[0]
                 
                 # Obtener todos los productos
-                cursor.execute("SELECT id_producto, precio_venta, costo_variable FROM Productos")
+                cursor.execute("SELECT id_producto, precio_venta, costo_produccion FROM Productos")
                 productos = cursor.fetchall()
                 
                 if not productos:
@@ -369,12 +361,12 @@ class Admin:
         id_producto = input("Por favor, ingrese el ID del producto: ")
         with sqlite3.connect ("empresalapices.db") as conn:
             cursor = conn.cursor()
-            cursor.execute("Select * from Productos")
+            cursor.execute("Select * from Productos Where id_producto = ?", (id_producto))
             productos = cursor.fetchall()[0]
 
 
         # Verificar si el producto existe
-            if id_producto not in productos:
+            if not productos:
                 print("El ID del producto no existe.")
                 return
         
@@ -393,7 +385,7 @@ class Admin:
                 costos_fijos = costos_fijos_result[0]
                 
                 # Obtener el producto específico
-                cursor.execute("SELECT precio_venta, costo_variable FROM Productos WHERE id_producto = ?", (id_producto,))
+                cursor.execute("SELECT precio_venta, costo_produccion FROM Productos WHERE id_producto = ?", (id_producto,))
                 producto = cursor.fetchone()
                 
                 if producto:
