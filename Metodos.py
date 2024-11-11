@@ -357,6 +357,19 @@ class Admin:
     
     def punto_equilibrio_producto_especifico(self):
         """Calcula el punto de equilibrio para un producto específico."""
+                # Mostrar todos los productos con su ID, nombre y stock
+        with sqlite3.connect("empresalapices.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id_producto, nombre FROM Productos")
+            productos = cursor.fetchall()
+
+            if not productos:
+                print("No hay productos disponibles.")
+                return
+
+            print("Productos disponibles:")
+            for producto in productos:
+                print(f"ID: {producto[0]}, Nombre: {producto[1]}")
         
         id_producto = input("Por favor, ingrese el ID del producto: ")
         with sqlite3.connect ("empresalapices.db") as conn:
