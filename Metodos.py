@@ -402,3 +402,78 @@ class Admin:
             print(f"Error de base de datos: {e}")
         except Exception as e:
             print(f"Ocurrió un error inesperado: {e}")
+
+    def registrar_venta(self):
+        """Registra una venta en la base de datos mostrando los productos disponibles y su stock."""
+
+        # Mostrar todos los productos con su ID, nombre y stock
+        with sqlite3.connect("empresalapices.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id_producto, nombre, stock FROM Productos")
+            productos = cursor.fetchall()
+
+            if not productos:
+                print("No hay productos disponibles.")
+                return
+
+            print("Productos disponibles:")
+            for producto in productos:
+                print(f"ID: {producto[0]}, Nombre: {producto[1]}, Stock: {producto[2]}")
+        
+        # Solicitar ID del producto
+        try:
+            id_producto = int(input("\nIngrese el ID del producto vendido: "))
+        except ValueError:
+            print("Por favor, ingrese un ID válido.")
+            return
+
+        # Verificar si el producto existe y obtener el stock y precio
+        with sqlite3.connect("empresalapices.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT stock, precio_venta, nombre FROM Productos WHERE id_producto = ?", (id_producto,))
+            producto = cursor.fetchone()
+
+            if not producto:
+                print("Producto no encontrado. Verifique el ID.")
+                return
+
+            stock_disponible, precio_venta, nombre_producto = producto
+            print(f"Producto seleccionado: {nombre_producto} - Stock disponible: {stock_disponible}")
+
+        # Solicitar cantidad vendida
+        try:
+            cantidad_vendida = int(input("Ingrese la cantidad vendida: "))
+            if cantidad_vendida <= 0:
+                print("La cantidad vendida debe ser un número positivo.")
+                return
+            if cantidad_vendida > stock_disponible:
+                print("No hay suficiente stock disponible.")
+                return
+        except ValueError:
+            print("Por favor, ingrese una cantidad válida.")
+            return
+
+        # Solicitar fecha de venta o usar la fecha actual
+        fecha_venta = input("Ingrese la fecha de la venta (YYYY-MM-DD) o deje vacío para usar la fecha actual: ")
+        if fecha_venta:
+            if not self.validar_fecha(fecha_venta):
+                print("Formato de fecha no válido. Se usará la fecha actual.")
+                fecha_venta = datetime.now().strftime("%Y-%m-%d")
+        else:
+            fecha_venta = datetime.now().strftime("%Y-%m-%d")
+
+        # Registrar la venta y actualizar el inventario
+        with sqlite3.connect("empresalapices.db") as conn:
+            cursor = conn.cursor()
+
+            # Insertar la venta en la tabla Ventas
+            cursor.execute("""
+                INSERT INTO Ventas (id_producto, cantidad_vendida, precio_venta, fecha)
+                VALUES (?, ?, ?, ?)
+            """, (id_producto, cantidad_vendida, precio_venta, fecha_venta))
+
+            # Actualizar el stock en la tabla Productos
+            nuevo_stock = stock_disponible - cantidad_vendida
+            cursor.execute("UPDATE Productos SET stock = ? WHERE id_producto = ?", (nuevo_stock, id_producto))
+
+        print(f"Venta registrada exitosamente: {cantidad_vendida} unidades de '{nombre_producto}' a un precio unitario de ${precio_venta:.2f}.")

@@ -8,11 +8,12 @@ def ejecutar_menu():
         '2': ('Agregar gastos operativos', met.registrar_gasto_operativo),
         '3': ('Agregar ingreso', met.registrar_ingreso),
         '4': ('Agregar otros gastos', met.registrar_otro_gasto),
-        '5': ('Estado de Resultados General', met.estado_resultado_general),
-        '6': ('Estado de Resultados por Periodo', met.estado_resultado_por_periodo),
-        '7': ('Punto de Equilibrio General', met.punto_equilibrio_todos_productos),
-        '8': ('Punto de Equilibrio Producto Especifico', met.punto_equilibrio_producto_especifico),
-        '9': ('Salida', confirmar_salida)
+        '5': ('Registrar Venta', met.registrar_venta),
+        '6': ('Estado de Resultados General', met.estado_resultado_general),
+        '7': ('Estado de Resultados por Periodo', met.estado_resultado_por_periodo),
+        '8': ('Punto de Equilibrio General', met.punto_equilibrio_todos_productos),
+        '9': ('Punto de Equilibrio Producto Especifico', met.punto_equilibrio_producto_especifico),
+        '10': ('Salida', confirmar_salida)
     }
     while True:
         print("\n--- Menú Principal ---")
